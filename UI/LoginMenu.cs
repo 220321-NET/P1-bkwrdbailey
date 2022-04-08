@@ -6,10 +6,10 @@ namespace UI;
 public class LoginMenu
 {
 
-    private readonly IStoreBL _bl;
-    public LoginMenu(IStoreBL bl)
+    private readonly HttpService _httpClient;
+    public LoginMenu(HttpService httpClient)
     {
-        _bl = bl;
+        _httpClient = httpClient;
     }
 
     public void Menu()
@@ -52,25 +52,24 @@ public class LoginMenu
             if (user.IsEmployed == true)
             {
                 Employee employee = (Employee)user;
-                new EmployeeMenu(_bl, employee).AdminMenu();
+                // new EmployeeMenu(_bl, employee).AdminMenu();
             }
             else
             {
                 User customer = user;
-                new CustomerMenu(_bl, customer).StoreMenu();
+                // new CustomerMenu(_bl, customer).StoreMenu();
             }
         }
         Console.WriteLine("Logging out...");
     }
 
-    private User Login()
-    {
+    private User Login()    {
 
     Login:
         Console.WriteLine("Enter your Username:\nWarning: case-sensitive");
         string userName = Console.ReadLine().Trim();
 
-        List<User> users = _bl.GetAllUsers();
+        // List<User> users = _bl.GetAllUsers();
 
         foreach (User user in users)
         {
@@ -136,7 +135,7 @@ public class LoginMenu
         Console.WriteLine("Enter a Username: ");
         string userName = Console.ReadLine().Trim();
 
-        List<User> users = _bl.GetAllUsers();
+        // List<User> users = _bl.GetAllUsers();
 
         foreach (User user in users)
         {
@@ -170,7 +169,7 @@ public class LoginMenu
         newUser.UserName = userName;
         newUser.Password = password;
 
-        _bl.AddUser(newUser);
+        // _bl.AddUser(newUser);
 
         return newUser;
     }

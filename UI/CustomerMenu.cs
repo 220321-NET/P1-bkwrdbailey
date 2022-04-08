@@ -205,7 +205,7 @@ public class CustomerMenu
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Invalid Input");
+            Console.WriteLine("Invalid Input");
             Log.Information($"Exception Caught: {e}");
             goto ItemToAdd;
         }
@@ -228,13 +228,14 @@ public class CustomerMenu
                 Console.WriteLine("How many of this item would you like:");
                 int amount;
 
-                Log.Logger = new LoggerConfiguration()
-                    .MinimumLevel.Debug()
-                    .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
-                    .CreateLogger();
 
                 try
                 {
+                    Log.Logger = new LoggerConfiguration()
+                        .MinimumLevel.Debug()
+                        .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+                        .CreateLogger();
+
                     amount = Convert.ToInt32(Console.ReadLine());
                 }
                 catch (Exception e)

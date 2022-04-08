@@ -77,14 +77,28 @@ public class DBRepository : IRepository
             string password = reader.GetString(2);
             bool _isEmployed = reader.GetBoolean(3);
 
-            User user = new User
+            if (_isEmployed == true)
             {
-                Id = id,
-                UserName = userName,
-                Password = password,
-                IsEmployed = _isEmployed
-            };
-            users.Add(user);
+                Employee employee = new Employee
+                {
+                    Id = id,
+                    UserName = userName,
+                    Password = password,
+                    IsEmployed = _isEmployed,
+                };
+                users.Add(employee);
+            }
+            else
+            {
+                User customer = new User
+                {
+                    Id = id,
+                    UserName = userName,
+                    Password = password,
+                    IsEmployed = _isEmployed
+                };
+                users.Add(customer);
+            }
         }
 
         reader.Close();
