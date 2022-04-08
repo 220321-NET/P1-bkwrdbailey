@@ -3,8 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 **/connectionString.txt
-WebAPI/appsettings.json
-WebAPI/appsettings.Development.json
+./WebAPI/appsettings.json
+./WebAPI/appsettings.Development.json
 appsettings.json
 appsettings.Development.json
 
