@@ -1,25 +1,27 @@
+// using BL;
 using Models;
-using BL;
 using Serilog;
 
 namespace UI;
 
 public class CustomerMenu
 {
-    private readonly IStoreBL _bl;
+
+    private readonly HttpService _httpService;
     private User _user = new User();
     private Cart cart = new Cart();
     private Store currentStore = new Store();
 
-    public CustomerMenu(IStoreBL bl, User user)
+    public CustomerMenu(HttpService httpService, User user)
     {
-        _bl = bl;
+        _httpService = httpService;
         _user = user;
     }
 
-    public void StoreMenu()
+    public async Task StoreMenu()
     {
-        List<Store> stores = _bl.GetAllStores();
+        
+        List<Store> stores = await _httpService.GetAllStoresAsync();
 
         Console.WriteLine("==================================================================");
 
@@ -49,7 +51,7 @@ public class CustomerMenu
         }
         else if (storeAnswer == "3")
         {
-            ViewOrderHistory();
+            await ViewOrderHistory();
             goto StoreLocation;
         }
         else if (storeAnswer.ToLower() == "x")
@@ -62,8 +64,8 @@ public class CustomerMenu
             goto StoreLocation;
         }
 
-        currentStore = _bl.GetStoreInventory(currentStore);
-        string result = Menu();
+        currentStore = await _httpService.GetStoreInventoryAsync(currentStore);
+        string result = await Menu();
 
         if (result == "6")
         {
@@ -71,7 +73,7 @@ public class CustomerMenu
         }
     }
 
-    private string Menu()
+    private async Task<string> Menu()
     {
     MenuChoices:
         Console.WriteLine("[1] See inventory");
@@ -134,7 +136,7 @@ public class CustomerMenu
                 }
                 else
                 {
-                    bool HasCheckedOut = Checkout();
+                    bool HasCheckedOut = await Checkout();
 
                     if (HasCheckedOut)
                     {
@@ -339,7 +341,7 @@ public class CustomerMenu
         }
     }
 
-    private bool Checkout()
+    private async Task<bool> Checkout()
     {
     CheckoutChoice:
         cart.CartContents();
@@ -355,7 +357,7 @@ public class CustomerMenu
             order.customer = _user;
             order.cart = cart;
             order.store = currentStore;
-            _bl.AddOrder(order);
+            await _httpService.AddOrderAsync(order);
             return true;
         }
         else if (choice == "N")
@@ -373,9 +375,9 @@ public class CustomerMenu
         currentStore.DisplayStock();
     }
 
-    private void ViewOrderHistory()
+    private async Task ViewOrderHistory()
     {
-        List<OrderHistory> userOrderHistory = _bl.GetOrderHistoryByUser(_user);
+        List<OrderHistory> userOrderHistory = await _httpService.GetOrderHistoryByUserAsync(_user.Id);
 
         if (userOrderHistory.Count == 0)
         {

@@ -10,9 +10,9 @@ public class StoreBL : IStoreBL
         _repo = repo;
     }
 
-    public List<User> GetAllUsers()
+    public async Task<List<User>> GetAllUsersAsync()
     {
-        return _repo.GetAllUsers();
+        return await _repo.GetAllUsersAsync();
     }
 
     public User AddUser(User userToAdd)
@@ -25,25 +25,25 @@ public class StoreBL : IStoreBL
         _repo.CreateOrder(order);
     }
 
-    public List<Store> GetAllStores()
+    public async Task<List<Store>> GetAllStoresAsync()
     {
-        return _repo.GetAllStores();
+        return await _repo.GetAllStoresAsync();
     }
 
-    public Store GetStoreInventory(Store currentStore)
+    public List<Product> GetStoreInventory(int currStoreId)
     {
-        return _repo.GetStoreInventory(currentStore);
+        return _repo.GetStoreInventory(currStoreId);
     }
 
-    public List<OrderHistory> GetOrderHistoryByStore(Store _store)
+    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId)
     {
-        List<OrderHistory> storeOrderHistory = _repo.GetOrderHistoryByStore(_store);
+        List<OrderHistory> storeOrderHistory = await _repo.GetOrderHistoryByStoreAsync(storeId);
         return storeOrderHistory;
     }
 
-    public List<OrderHistory> GetOrderHistoryByUser(User user)
+    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId)
     {
-        List<OrderHistory> userOrderHistory = _repo.GetOrderHistoryByUser(user);
+        List<OrderHistory> userOrderHistory = await _repo.GetOrderHistoryByUserAsync(userId);
         return userOrderHistory;
     }
 }

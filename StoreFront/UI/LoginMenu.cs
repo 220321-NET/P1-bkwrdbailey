@@ -6,13 +6,13 @@ namespace UI;
 public class LoginMenu
 {
 
-    private readonly HttpService _httpClient;
-    public LoginMenu(HttpService httpClient)
+    private readonly HttpService _httpService;
+    public LoginMenu(HttpService httpService)
     {
-        _httpClient = httpClient;
+        _httpService = httpService;
     }
 
-    public void Menu()
+    public async Task Menu()
     {
         Console.WriteLine("=========================================\n====== Just Another Computer Store ======\n=========================================\n");
 
@@ -26,11 +26,11 @@ public class LoginMenu
 
         if (answer == "1")
         {
-            user = Login();
+            user = await Login();
         }
         else if (answer == "2")
         {
-            user = Register();
+            user = await Register();
 
         }
         else if (answer.ToLower() == "x")
@@ -52,24 +52,24 @@ public class LoginMenu
             if (user.IsEmployed == true)
             {
                 Employee employee = (Employee)user;
-                // new EmployeeMenu(_bl, employee).AdminMenu();
+                await new EmployeeMenu(_httpService, employee).AdminMenu();
             }
             else
             {
                 User customer = user;
-                // new CustomerMenu(_bl, customer).StoreMenu();
+                await new CustomerMenu(_httpService, customer).StoreMenu();
             }
         }
         Console.WriteLine("Logging out...");
     }
 
-    private User Login()    {
+    private async Task<User> Login()    {
 
     Login:
         Console.WriteLine("Enter your Username:\nWarning: case-sensitive");
         string userName = Console.ReadLine().Trim();
 
-        // List<User> users = _bl.GetAllUsers();
+        List<User> users = await _httpService.GetAllUsersAsync();
 
         foreach (User user in users)
         {
@@ -119,7 +119,7 @@ public class LoginMenu
         }
         else if (outerResponse == "2")
         {
-            User customer = Register();
+            User customer = await Register();
             return customer;
         }
         else
@@ -129,13 +129,13 @@ public class LoginMenu
         }
     }
 
-    public User Register()
+    public async Task<User> Register()
     {
     Register:
         Console.WriteLine("Enter a Username: ");
         string userName = Console.ReadLine().Trim();
 
-        // List<User> users = _bl.GetAllUsers();
+        List<User> users = await _httpService.GetAllUsersAsync();
 
         foreach (User user in users)
         {
@@ -169,7 +169,7 @@ public class LoginMenu
         newUser.UserName = userName;
         newUser.Password = password;
 
-        // _bl.AddUser(newUser);
+        await _httpService.AddUserAsync(newUser);
 
         return newUser;
     }

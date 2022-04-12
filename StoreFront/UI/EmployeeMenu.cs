@@ -5,17 +5,18 @@ namespace UI;
 
 public class EmployeeMenu
 {
-    private readonly IStoreBL _bl;
+
+    private readonly HttpService _httpService;
     private Employee _user = new Employee();
     private Store currentStore = null;
 
-    public EmployeeMenu(IStoreBL bl, Employee user)
+    public EmployeeMenu(HttpService httpService, Employee user)
     {
-        _bl = bl;
+        _httpService = httpService;
         _user = user;
     }
 
-    public void AdminMenu()
+    public async Task AdminMenu()
     {
         Console.WriteLine("========================");
         Console.WriteLine("====== ADMIN MENU ======");
@@ -40,7 +41,7 @@ public class EmployeeMenu
         switch (adminChoice)
         {
             case "1":
-                SelectAStore();
+                await SelectAStore();
                 break;
 
             case "2":
@@ -62,9 +63,9 @@ public class EmployeeMenu
         goto AdminChoices;
     }
 
-    private void SelectAStore()
+    private async Task SelectAStore()
     {
-        List<Store> allStores = _bl.GetAllStores();
+        List<Store> allStores = await _httpService.GetAllStoresAsync();
 
     StoreSelection:
         int i = 1;
@@ -92,9 +93,9 @@ public class EmployeeMenu
         }
     }
 
-    private void StoreOrderHistory()
+    private async void StoreOrderHistory()
     {
-        List<OrderHistory> storeOrderHistory = _bl.GetOrderHistoryByStore(currentStore);
+        List<OrderHistory> storeOrderHistory = await _httpService.GetOrderHistoryByStoreAsync(currentStore.Id);
 
         foreach (OrderHistory order in storeOrderHistory)
         {

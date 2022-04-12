@@ -3,11 +3,11 @@ namespace BL;
 
 public interface IStoreBL
 {
-    List<User> GetAllUsers();
+    Task<List<User>> GetAllUsersAsync();
     User AddUser(User userToAdd);
     void AddOrder(Order order);
-    List<Store> GetAllStores();
-    Store GetStoreInventory(Store currentStore);
-    List<OrderHistory> GetOrderHistoryByStore(Store _store);
-    List<OrderHistory> GetOrderHistoryByUser(User user);
+    Task<List<Store>> GetAllStoresAsync();
+    List<Product> GetStoreInventory(int currStoreId);
+    Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId);
+    Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId);
 }

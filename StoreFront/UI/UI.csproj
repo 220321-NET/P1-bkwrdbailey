@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    
+    <ProjectReference Include="..\..\StoreBack\BL\BL.csproj" />
+    
     <ProjectReference Include="..\Models\Models.csproj" />
-    <ProjectReference Include="..\BL\BL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

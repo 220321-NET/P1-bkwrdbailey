@@ -18,7 +18,7 @@ public class DBRepository : IRepository
     /// </summary>
     /// <param name="currentStore">The instance of the current store the user selected</param>
     /// <returns>List of the current store's inventory</returns>
-    public Store GetStoreInventory(Store currentStore)
+    public List<Product> GetStoreInventory(int currentStoreId)
     {
 
         List<Product> storeInventory = new List<Product>();
@@ -27,7 +27,7 @@ public class DBRepository : IRepository
 
         SqlConnection connection = new SqlConnection(_connectionString);
         SqlCommand cmd = new SqlCommand("SELECT ProductId, StoreFrontId, Product.Name as ProductName, Description, Price, Quantity FROM Inventory JOIN Product ON (Product.Id = ProductId) JOIN StoreFront ON (StoreFront.Id = StoreFrontId) WHERE StoreFrontId = @id;", connection);
-        cmd.Parameters.AddWithValue("@id", currentStore.Id);
+        cmd.Parameters.AddWithValue("@id", currentStoreId);
 
         SqlDataAdapter inventoryAdapter = new SqlDataAdapter(cmd);
 
@@ -48,9 +48,8 @@ public class DBRepository : IRepository
                 storeInventory.Add(product);
             }
         }
-        currentStore.Inventory = storeInventory;
 
-        return currentStore;
+        return storeInventory;
     }
 
     /// <summary>
@@ -59,7 +58,7 @@ public class DBRepository : IRepository
     /// Also adds either a User instance or an Employee instance to the return list based on the IsEmployed boolean value
     /// </summary>
     /// <returns>A list of all the users in the Azure Database</returns>
-    public List<User> GetAllUsers()
+    public async Task<List<User>> GetAllUsersAsync()
     {
 
         List<User> users = new List<User>();
@@ -70,7 +69,7 @@ public class DBRepository : IRepository
         SqlCommand cmd = new SqlCommand("SELECT * FROM Users", connection);
         SqlDataReader reader = cmd.ExecuteReader();
 
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
             int id = reader.GetInt32(0);
             string userName = reader.GetString(1);
@@ -111,7 +110,7 @@ public class DBRepository : IRepository
     /// Adds every store record in the database to a stores list to be returned individual store interaction
     /// </summary>
     /// <returns>A list of all the stores from the Azure Database</returns>
-    public List<Store> GetAllStores()
+    public async Task<List<Store>> GetAllStoresAsync()
     {
         List<Store> stores = new List<Store>();
 
@@ -121,7 +120,7 @@ public class DBRepository : IRepository
         SqlCommand cmd = new SqlCommand("SELECT * FROM StoreFront", connection);
         SqlDataReader reader = cmd.ExecuteReader();
 
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
             int id = reader.GetInt32(0);
             string name = reader.GetString(1);
@@ -150,16 +149,16 @@ public class DBRepository : IRepository
     /// </summary>
     /// <param name="user">The current User object that is interacting with the application</param>
     /// <returns>A list of OrderHistory objects populated from a SQL call</returns>
-    public List<OrderHistory> GetOrderHistoryByUser(User user)
+    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId)
     {
         List<OrderHistory> userOrderHistory = new List<OrderHistory>();
-        List<Store> stores = GetAllStores();
+        List<Store> stores = await GetAllStoresAsync();
 
         SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
 
         SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFrontId, CustomerId, DateOrdered, Quantity, Product.Name, Product.Price, TotalCost FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) WHERE CustomerId = @customerId ORDER BY StoreFrontId;", connection);
-        cmd.Parameters.AddWithValue("@customerId", user.Id);
+        cmd.Parameters.AddWithValue("@customerId", userId);
 
         SqlDataReader reader = cmd.ExecuteReader();
 
@@ -206,16 +205,16 @@ public class DBRepository : IRepository
     /// </summary>
     /// <param name="_store">The current Store object thats order history is being requested</param>
     /// <returns>Gives back a list of OrderHistory objects based on a specific store</returns>
-    public List<OrderHistory> GetOrderHistoryByStore(Store _store)
+    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int _storeId)
     {
         List<OrderHistory> storeOrderHistory = new List<OrderHistory>();
-        List<User> users = GetAllUsers();
+        List<User> users = await GetAllUsersAsync();
 
         SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
 
         SqlCommand cmd = new SqlCommand("SELECT Orders.Id, CustomerId, DateOrdered, Quantity, Product.Name, TotalCost, StoreFrontId, Price FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) WHERE StoreFrontId = @storeId ORDER BY StoreFrontId;", connection);
-        cmd.Parameters.AddWithValue("@storeId", _store.Id);
+        cmd.Parameters.AddWithValue("@storeId", _storeId);
 
         SqlDataReader reader = cmd.ExecuteReader();
 

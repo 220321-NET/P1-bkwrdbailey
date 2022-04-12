@@ -3,11 +3,11 @@ namespace DL;
 
 public interface IRepository
 {
-    Store GetStoreInventory(Store currentStore);
-    List<User> GetAllUsers();
-    List<Store> GetAllStores();
-    List<OrderHistory> GetOrderHistoryByUser(User user);
-    List<OrderHistory> GetOrderHistoryByStore(Store _store);
+    List<Product> GetStoreInventory(int currentStoreId);
+    Task<List<User>> GetAllUsersAsync();
+    Task<List<Store>> GetAllStoresAsync();
+    Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId);
+    Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId);
     User CreateUser(User userToAdd);
     void CreateOrder(Order order);
     void CreateCart(Order order);

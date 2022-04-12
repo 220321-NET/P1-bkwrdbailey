@@ -8,4 +8,4 @@
 // IRepository repo = new DBRepository(connectionString);
 // IStoreBL bl = new StoreBL(repo);
 HttpService http = new HttpService();
-new LoginMenu(http).Menu();
+await new LoginMenu(http).Menu();
