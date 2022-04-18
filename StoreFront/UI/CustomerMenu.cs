@@ -20,13 +20,13 @@ public class CustomerMenu
 
     public async Task StoreMenu()
     {
-        
+
         List<Store> stores = await _httpService.GetAllStoresAsync();
 
         Console.WriteLine("==================================================================");
 
     StoreLocation:
-        Console.WriteLine("Select a store to shop at or View your order history"); // Maybe change later if I want to add more than two store locations
+        Console.WriteLine("Select a store to shop at or View your order history");
 
         int i = 1;
         foreach (Store store in stores)
@@ -64,8 +64,8 @@ public class CustomerMenu
             goto StoreLocation;
         }
 
-        currentStore = await _httpService.GetStoreInventoryAsync(currentStore);
-        string result = await Menu();
+        currentStore.Inventory = await _httpService.GetStoreInventoryAsync(currentStore);
+        string result = Menu();
 
         if (result == "6")
         {
@@ -73,7 +73,7 @@ public class CustomerMenu
         }
     }
 
-    private async Task<string> Menu()
+    private string Menu()
     {
     MenuChoices:
         Console.WriteLine("[1] See inventory");
@@ -96,7 +96,7 @@ public class CustomerMenu
                 break;
 
             case "2":
-                AddProduct();
+                AddProductToCart();
                 Console.WriteLine("==================================================================");
                 break;
 
@@ -136,7 +136,7 @@ public class CustomerMenu
                 }
                 else
                 {
-                    bool HasCheckedOut = await Checkout();
+                    bool HasCheckedOut = Checkout();
 
                     if (HasCheckedOut)
                     {
@@ -186,7 +186,7 @@ public class CustomerMenu
         goto MenuChoices;
     }
 
-    private void AddProduct()
+    private void AddProductToCart()
     {
     ItemToAdd:
         Inventory();
@@ -341,7 +341,7 @@ public class CustomerMenu
         }
     }
 
-    private async Task<bool> Checkout()
+    private bool Checkout()
     {
     CheckoutChoice:
         cart.CartContents();
@@ -357,7 +357,7 @@ public class CustomerMenu
             order.customer = _user;
             order.cart = cart;
             order.store = currentStore;
-            await _httpService.AddOrderAsync(order);
+            _httpService.AddOrderAsync(order);
             return true;
         }
         else if (choice == "N")
@@ -377,7 +377,14 @@ public class CustomerMenu
 
     private async Task ViewOrderHistory()
     {
-        List<OrderHistory> userOrderHistory = await _httpService.GetOrderHistoryByUserAsync(_user.Id);
+        int sortOrder = 5;
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+
+        List<OrderHistory> userOrderHistory = await _httpService.GetOrderHistoryByUserAsync(_user.Id, sortOrder);
 
         if (userOrderHistory.Count == 0)
         {
@@ -386,9 +393,39 @@ public class CustomerMenu
             return;
         }
 
+    SortDecision:
+        Console.WriteLine("Would you like to sort the order history:");
+        Console.WriteLine("[1] Sort by Low-High Total Cost");
+        Console.WriteLine("[2] Sort by High-Low Total Cost");
+        Console.WriteLine("[3] Sort by Old-New Date Ordered");
+        Console.WriteLine("[4] Sort by New-Old Date Ordered");
+        Console.WriteLine("[5] No Sorting Filter");
+
+        try
+        {
+            sortOrder = Convert.ToInt32(Console.ReadLine());
+            if (sortOrder > 5 || sortOrder < 1)
+            {
+                Console.WriteLine("Invalid Choice entered");
+                goto SortDecision;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Invalid Input");
+            Log.Information($"Exception Caught: {e}");
+            goto SortDecision;
+        }
+
+        Log.CloseAndFlush();
+
+        userOrderHistory = await _httpService.GetOrderHistoryByUserAsync(_user.Id, sortOrder);
+
+        Console.WriteLine("===========================\n====== Order History ======\n===========================");
+
         foreach (OrderHistory order in userOrderHistory)
         {
-            Console.WriteLine($"{order.store.Name} | {order.store.Address}:\n${order.ItemPrice} | {order.ProductName} | {order.ItemQty} QTY. | {order.DateOrdered}");
+            Console.WriteLine($"{order.OrderId} | {order.StoreName} | {order.StoreAddress} | ${order.TotalCost}:\n -Product Info:${order.ItemPrice} | {order.ProductName} | {order.ItemQty} QTY. | {order.DateOrdered}");
         }
 
         Console.WriteLine("==================================================================");

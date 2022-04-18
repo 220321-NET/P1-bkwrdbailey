@@ -26,7 +26,7 @@ public class DBRepository : IRepository
         DataSet inventorySet = new DataSet();
 
         SqlConnection connection = new SqlConnection(_connectionString);
-        SqlCommand cmd = new SqlCommand("SELECT ProductId, StoreFrontId, Product.Name as ProductName, Description, Price, Quantity FROM Inventory JOIN Product ON (Product.Id = ProductId) JOIN StoreFront ON (StoreFront.Id = StoreFrontId) WHERE StoreFrontId = @id;", connection);
+        SqlCommand cmd = new SqlCommand("SELECT ProductId, StoreFrontId, Product.Name as ProductName, Description, Inventory.ProductPrice, Quantity FROM Inventory JOIN Product ON (Product.Id = ProductId) JOIN StoreFront ON (StoreFront.Id = StoreFrontId) WHERE StoreFrontId = @id;", connection);
         cmd.Parameters.AddWithValue("@id", currentStoreId);
 
         SqlDataAdapter inventoryAdapter = new SqlDataAdapter(cmd);
@@ -42,7 +42,7 @@ public class DBRepository : IRepository
                 product.Id = (int)row["ProductId"];
                 product.Name = (string)row["ProductName"];
                 product.Description = (string)row["Description"];
-                product.Price = (double)row["Price"];
+                product.Price = (double)row["ProductPrice"];
                 product.Quantity = (int)row["Quantity"];
 
                 storeInventory.Add(product);
@@ -149,15 +149,35 @@ public class DBRepository : IRepository
     /// </summary>
     /// <param name="user">The current User object that is interacting with the application</param>
     /// <returns>A list of OrderHistory objects populated from a SQL call</returns>
-    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId)
+    public List<OrderHistory> GetOrderHistoryByUserAsync(int userId, int sortOrder)
     {
         List<OrderHistory> userOrderHistory = new List<OrderHistory>();
-        List<Store> stores = await GetAllStoresAsync();
+        SqlCommand cmd;
 
         SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
 
-        SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFrontId, CustomerId, DateOrdered, Quantity, Product.Name, Product.Price, TotalCost FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) WHERE CustomerId = @customerId ORDER BY StoreFrontId;", connection);
+        if (sortOrder == 1)
+        {
+            SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFront.Id, Orders.DateOrdered, Cart.Quantity, Product.Name, Inventory.ProductPrice, Orders.TotalCost, StoreFront.Name, StoreFront.Address FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Product ON (Cart.ProductId = Product.Id) WHERE Orders.CustomerId = @customerId ORDER BY Orders.TotalCost ASC;", connection);
+        }
+        else if (sortOrder == 2)
+        {
+            SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFront.Id, Orders.DateOrdered, Cart.Quantity, Product.Name, Inventory.ProductPrice, Orders.TotalCost, StoreFront.Name, StoreFront.Address FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Product ON (Cart.ProductId = Product.Id) WHERE Orders.CustomerId = @customerId ORDER BY Orders.TotalCost DESC;", connection);
+        }
+        else if (sortOrder == 3)
+        {
+            SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFront.Id, Orders.DateOrdered, Cart.Quantity, Product.Name, Inventory.ProductPrice, Orders.TotalCost, StoreFront.Name, StoreFront.Address FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Product ON (Cart.ProductId = Product.Id) WHERE Orders.CustomerId = @customerId ORDER BY DateOrdered ASC;", connection);
+        }
+        else if (sortOrder == 4)
+        {
+            SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFront.Id, Orders.DateOrdered, Cart.Quantity, Product.Name, Inventory.ProductPrice, Orders.TotalCost, StoreFront.Name, StoreFront.Address FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Product ON (Cart.ProductId = Product.Id) WHERE Orders.CustomerId = @customerId ORDER BY DateOrdered DESC;", connection);
+        }
+        else
+        {
+            SqlCommand cmd = new SqlCommand("SELECT Orders.Id, StoreFront.Id, Orders.DateOrdered, Cart.Quantity, Product.Name, Inventory.ProductPrice, Orders.TotalCost, StoreFront.Name, StoreFront.Address FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Product ON (Cart.ProductId = Product.Id) WHERE Orders.CustomerId = @customerId ORDER BY Orders.CustomerId ASC;", connection);
+        }
+
         cmd.Parameters.AddWithValue("@customerId", userId);
 
         SqlDataReader reader = cmd.ExecuteReader();
@@ -171,6 +191,8 @@ public class DBRepository : IRepository
             string itemName = reader.GetString(5);
             double itemPrice = reader.GetDouble(6);
             double totalCost = reader.GetDouble(7);
+            string storesName = reader.GetString(8);
+            string storesAddress = reader.GetString(9);
 
             OrderHistory order = new OrderHistory
             {
@@ -181,16 +203,9 @@ public class DBRepository : IRepository
                 ItemPrice = itemPrice,
                 ItemQty = itemQty,
                 DateOrdered = date,
+                StoreName = storesName,
+                StoreAddress = storesAddress
             };
-
-            foreach (Store store in stores)
-            {
-                if (store.Id == storeId)
-                {
-                    order.store = store;
-                    break;
-                }
-            }
 
             userOrderHistory.Add(order);
         }
@@ -205,15 +220,35 @@ public class DBRepository : IRepository
     /// </summary>
     /// <param name="_store">The current Store object thats order history is being requested</param>
     /// <returns>Gives back a list of OrderHistory objects based on a specific store</returns>
-    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int _storeId)
+    public List<OrderHistory> GetOrderHistoryByStoreAsync(int _storeId, int sortOrder)
     {
         List<OrderHistory> storeOrderHistory = new List<OrderHistory>();
-        List<User> users = await GetAllUsersAsync();
-
         SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
 
-        SqlCommand cmd = new SqlCommand("SELECT Orders.Id, CustomerId, DateOrdered, Quantity, Product.Name, TotalCost, StoreFrontId, Price FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) WHERE StoreFrontId = @storeId ORDER BY StoreFrontId;", connection);
+        SqlCommand cmd;
+
+        if (sortOrder == 1)
+        {
+            cmd = new SqlCommand("SELECT Orders.Id, Users.UserName, DateOrdered, Cart.Quantity, Product.Name, TotalCost, StoreFront.Id, Inventory.ProductPrice FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Users ON (Users.Id = CustomerId) WHERE Orders.StoreFrontId = @storeId ORDER BY TotalCost ASC;", connection);
+        }
+        else if (sortOrder == 2)
+        {
+            cmd = new SqlCommand("SELECT Orders.Id, Users.UserName, DateOrdered, Cart.Quantity, Product.Name, TotalCost, StoreFront.Id, Inventory.ProductPrice FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Users ON (Users.Id = CustomerId) WHERE Orders.StoreFrontId = @storeId ORDER BY TotalCost DESC;", connection);
+        }
+        else if (sortOrder == 3)
+        {
+            cmd = new SqlCommand("SELECT Orders.Id, Users.UserName, DateOrdered, Cart.Quantity, Product.Name, TotalCost, StoreFront.Id, Inventory.ProductPrice FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Users ON (Users.Id = CustomerId) WHERE Orders.StoreFrontId = @storeId ORDER BY DateOrdered ASC;", connection);
+        }
+        else if (sortOrder == 4)
+        {
+            cmd = new SqlCommand("SELECT Orders.Id, Users.UserName, DateOrdered, Cart.Quantity, Product.Name, TotalCost, StoreFront.Id, Inventory.ProductPrice FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Users ON (Users.Id = CustomerId) WHERE Orders.StoreFrontId = @storeId ORDER BY DateOrdered DESC;", connection);
+        }
+        else
+        {
+            cmd = new SqlCommand("SELECT Orders.Id, Users.UserName, DateOrdered, Cart.Quantity, Product.Name, TotalCost, StoreFront.Id, Inventory.ProductPrice FROM Orders JOIN Cart ON (Cart.OrderId = Orders.Id) JOIN StoreFront ON (StoreFront.Id = Orders.StoreFrontId) JOIN Product ON (Product.Id = Cart.ProductId) JOIN Inventory ON (Inventory.StoreFrontId = Orders.StoreFrontId AND Inventory.ProductId = Cart.ProductId) JOIN Users ON (Users.Id = CustomerId) WHERE Orders.StoreFrontId = @storeId ORDER BY StoreFront.Id;", connection);
+        }
+
         cmd.Parameters.AddWithValue("@storeId", _storeId);
 
         SqlDataReader reader = cmd.ExecuteReader();
@@ -221,7 +256,7 @@ public class DBRepository : IRepository
         while (reader.Read())
         {
             int id = reader.GetInt32(0);
-            int customerId = reader.GetInt32(1);
+            string userName = reader.GetString(1);
             DateTime date = reader.GetDateTime(2);
             int itemQty = reader.GetInt32(3);
             string itemName = reader.GetString(4);
@@ -237,17 +272,9 @@ public class DBRepository : IRepository
                 TotalCost = totalCost,
                 ItemQty = itemQty,
                 DateOrdered = date,
-                ItemPrice = itemPrice
+                ItemPrice = itemPrice,
+                CustomerName = userName
             };
-
-            foreach (User user in users)
-            {
-                if (customerId == user.Id)
-                {
-                    order.customer = user;
-                    break;
-                }
-            }
             storeOrderHistory.Add(order);
         }
 
@@ -290,7 +317,7 @@ public class DBRepository : IRepository
     /// Takes a new created order instance and inserts a record of it into the Azure database
     /// </summary>
     /// <param name="order">The instance of order that will be added to the database</param>
-    public void CreateOrder(Order order)
+    public void CreateOrder(Order order)// REFACTOR DUE TO HTTPSERVICE CHANGE
     {
         DateTime currentDate = DateTime.Now;
         SqlConnection connection = new SqlConnection(_connectionString);
@@ -339,12 +366,22 @@ public class DBRepository : IRepository
 
         connection.Close();
 
-        UpdateInventory(order);
+        UpdateInventoryViaOrder(order);
     }
 
-    public void AddProduct(Product product)
+    public void CreateProduct(int storeId, Product newProduct)
     {
-        // Add new product to database
+        SqlConnection connection = new SqlConnection(_connectionString);
+        connection.Open();
+        SqlCommand cmd = new SqlCommand("INSERT INTO Product (Name, Description) OUTPUT INSERTED.Id VALUES (@productName, @productDesc)", connection);
+        cmd.Parameters.AddWithValue("@productName", newProduct.Name);
+        cmd.Parameters.AddWithValue("@productDesc", newProduct.Description);
+
+        newProduct.Id = (int)cmd.ExecuteScalar();
+
+        connection.Close();
+
+        UpdateInventoryViaNewProduct(storeId, newProduct);
     }
 
     /// <summary>
@@ -352,7 +389,7 @@ public class DBRepository : IRepository
     /// which has the updated inventory to be used for updating the inventory table in the Azure database
     /// </summary>
     /// <param name="order">Instance of order passed along for inventory updating</param>
-    public void UpdateInventory(Order order)
+    public void UpdateInventoryViaOrder(Order order)
     {
         SqlConnection connection = new SqlConnection(_connectionString);
         connection.Open();
@@ -365,8 +402,36 @@ public class DBRepository : IRepository
             cmd.Parameters.AddWithValue("@productId", product.Id);
             cmd.Parameters.AddWithValue("@storeFront", order.store.Id);
 
-            int id = (int)cmd.ExecuteScalar();
+            cmd.ExecuteNonQuery();
         }
+
+        connection.Close();
+    }
+
+    public void UpdateInventoryViaNewProduct(int storeId, Product productToUpdate)
+    {
+        SqlConnection connection = new SqlConnection(_connectionString);
+        connection.Open();
+
+        SqlCommand cmd = new SqlCommand("INSERT INTO Inventory (ProductId, StoreFrontId, Quantity, ProductPrice) VALUES (@productId, @storeFrontId, @quantity, @productPrice)", connection);
+        cmd.Parameters.AddWithValue("@productId", productToUpdate.Id);
+        cmd.Parameters.AddWithValue("@storeFrontId", storeId);
+        cmd.Parameters.AddWithValue("@quantity", productToUpdate.Quantity);
+        cmd.Parameters.AddWithValue("@productPrice", productToUpdate.Price);
+
+        connection.Close();
+    }
+
+    public void UpdateInventoryProduct(int storeId, Product productToUpdate)
+    {
+        SqlConnection connection = new SqlConnection(_connectionString);
+        connection.Open();
+
+        SqlCommand cmd = new SqlCommand("UPDATE Inventory SET ProductPrice = @productPrice, Quantity = @productQty WHERE ProductId = @productId AND StoreFrontId = @storeId", connection);
+        cmd.Parameters.AddWithValue("@productPrice", productToUpdate.Price);
+        cmd.Parameters.AddWithValue("@productQty", productToUpdate.Quantity);
+        cmd.Parameters.AddWithValue("@productId", productToUpdate.Id);
+        cmd.Parameters.AddWithValue("@storeId", storeId);
 
         connection.Close();
     }

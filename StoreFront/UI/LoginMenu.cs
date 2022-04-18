@@ -48,15 +48,24 @@ public class LoginMenu
             return;
         }
         else
+        
         {
             if (user.IsEmployed == true)
             {
-                Employee employee = (Employee)user;
+                Employee employee = new Employee
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Password = user.Password,
+                    IsEmployed = user.IsEmployed
+                };
+                Console.WriteLine("Logging in...");
                 await new EmployeeMenu(_httpService, employee).AdminMenu();
             }
             else
             {
                 User customer = user;
+                Console.WriteLine("Logging in...");
                 await new CustomerMenu(_httpService, customer).StoreMenu();
             }
         }
@@ -66,22 +75,21 @@ public class LoginMenu
     private async Task<User> Login()    {
 
     Login:
-        Console.WriteLine("Enter your Username:\nWarning: case-sensitive");
+        Console.WriteLine("Enter your Username:");
         string userName = Console.ReadLine().Trim();
 
         List<User> users = await _httpService.GetAllUsersAsync();
 
         foreach (User user in users)
         {
-            if (user.UserName == userName)
+            if (user.UserName.ToLower() == userName.ToLower())
             {
             Password:
-                Console.WriteLine("Enter you Password: ");
+                Console.WriteLine("Enter you Password:\nWarning: case-sensitive");
                 string password = Console.ReadLine().Trim();
 
                 if (user.Password == password)
                 {
-                    Console.WriteLine("Logging in...");
                     User signedIn = user;
                     return signedIn;
                 }
@@ -139,7 +147,7 @@ public class LoginMenu
 
         foreach (User user in users)
         {
-            if (user.UserName == userName)
+            if (user.UserName.ToLower() == userName.ToLower())
             {
             TryAgainResponse:
                 Console.WriteLine("That username is already taken!\nTry Again?[Y/N]");
@@ -161,7 +169,7 @@ public class LoginMenu
             }
         }
 
-        Console.WriteLine("Enter a Password");
+        Console.WriteLine("Enter a Password\nWarning: this will be case-sensitive");
         string password = Console.ReadLine().Trim();
 
         User newUser = new User();
@@ -169,7 +177,7 @@ public class LoginMenu
         newUser.UserName = userName;
         newUser.Password = password;
 
-        await _httpService.AddUserAsync(newUser);
+        newUser = await _httpService.AddUserAsync(newUser);
 
         return newUser;
     }

@@ -32,37 +32,49 @@ namespace WebAPI.Controllers
         }
 
         // GET api/<StoreController>/5
-        [HttpGet]
-        [Route("GetStoreOrderHistory")]
-        public async Task<List<OrderHistory>> GetStoreOrderHistoryAsync(int storeId)
+        [HttpGet("GetStoreOrderHistory/{storeId}/{sortOrder}")]
+        public ActionResult<List<OrderHistory>> GetStoreOrderHistoryAsync(int storeId, int sortOrder)
         {
-            return await _bl.GetOrderHistoryByStoreAsync(storeId);
+            return _bl.GetOrderHistoryByStoreAsync(storeId, sortOrder);
         }
 
-        [HttpGet]
-        [Route("GetUserOrderHistory")]
-        public async Task<List<OrderHistory>> GetUserOrderHistoryAsync(int userId)
+        [HttpGet("GetUserOrderHistory/{userId}/{sortOrder}")]
+        public ActionResult<List<OrderHistory>> GetUserOrderHistoryAsync(int userId, int sortOrder)
         {
-            return await _bl.GetOrderHistoryByUserAsync(userId);
+            return _bl.GetOrderHistoryByUserAsync(userId, sortOrder);
         }
 
         // GET: api/<StoreController>
-        [HttpGet("GetInventory")]
+        [HttpGet("GetInventory/{currStoreId}")]
         public ActionResult<List<Product>> GetStoreInventory(int currStoreId)
         {
             return _bl.GetStoreInventory(currStoreId);
         }
 
-        // POST api/<StoreController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        // POST api/<StoreController>/AddUser
+        [HttpPost("AddUser")]
+        public ActionResult<User> AddUser([FromBody] User user)
         {
+            User newUser = _bl.AddUser(user);
+            return Created("api/Store", newUser);
         }
 
-        // PUT api/<StoreController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPost("AddOrder")]
+        public void AddOrder([FromBody] Order order)
         {
+            _bl.AddOrder(order);
+        }
+
+        [HttpPost("AddProduct/{storeId}")]
+        public void AddProduct(int storeId, [FromBody] Product newProduct){
+            _bl.AddProduct(storeId, newProduct);
+        }
+
+        // PUT api/<StoreController>/UpdateInventory/4
+        [HttpPut("UpdateInventory/{storeId}")]
+        public void Put(int storeId, [FromBody] Product productToUpdate)
+        {
+            _bl.UpdateStoreInventory(storeId, productToUpdate);
         }
 
         // DELETE api/<StoreController>/5

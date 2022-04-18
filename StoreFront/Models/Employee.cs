@@ -4,11 +4,13 @@ using Serilog;
 
 public class Employee : User
 {
-    public void AddProduct()
+    public Product NewProduct()
     {
     ProductName:
         Product newProduct = new Product();
         string regularExpression = "^[a-zA-Z ]+$";
+        double productPrice;
+        int productQty;
         Regex regex = new Regex(regularExpression);
 
         Console.WriteLine("What is the name of the product:");
@@ -48,22 +50,41 @@ public class Employee : User
 
         try
         {
-            double productPrice = Convert.ToDouble(Console.ReadLine());
+            productPrice = Convert.ToDouble(Console.ReadLine());
         }
         catch (Exception e)
         {
             Log.Information($"Exception Caught: {e}");
+            Console.WriteLine("Invalid Input");
             goto ProductPrice;
         }
+
+    ProductQuantity:
+        Console.WriteLine("How much of this product will be available:");
+
+        try
+        {
+            productQty = Convert.ToInt32(Console.ReadLine());
+        }
+        catch (Exception e)
+        {
+            Log.Information($"Exception Caught: {e}");
+            Console.WriteLine("Invalid Input");
+            goto ProductQuantity;
+        }
+
+        Log.CloseAndFlush();
+
+        newProduct.Quantity = productQty;
+        newProduct.Price = productPrice;
+        newProduct.Name = productName;
+        newProduct.Description = productDesc;
+
+        return newProduct;
     }
 
-    public void RemoveProduct()
-    {
-        // Completely remove a product from the store
-    }
-
-    public void AdjustProductQuantity()
-    {
-        // Search through products to adjust quantity of a specific product
-    }
+    // public void RemoveProduct()
+    // {
+    //     // Completely remove a product from the store
+    // }
 }

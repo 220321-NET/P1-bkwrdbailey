@@ -8,7 +8,8 @@ public class OrderHistory
     public int ItemQty { get; set; }
     public double ItemPrice { get; set; }
     public DateTime DateOrdered { get; set; }
-    public User customer = new User();
-    public Store store = new Store();
+    public string CustomerName { get; set; } = "";
+    public string StoreName { get; set; } = "";
+    public string StoreAddress { get; set; } = "";
     public string ProductName { get; set; } = "";
 }

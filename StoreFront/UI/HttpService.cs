@@ -20,7 +20,7 @@ public class HttpService
         List<User> users = new List<User>();
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
@@ -45,7 +45,7 @@ public class HttpService
         List<Store> stores = new List<Store>();
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
@@ -66,17 +66,17 @@ public class HttpService
 
     }
 
-    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId)
+    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId, int sortOrder)
     {
         List<OrderHistory> storeOrderHistory = new List<OrderHistory>();
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
         {
-            storeOrderHistory = await JsonSerializer.DeserializeAsync<List<OrderHistory>>(await client.GetStreamAsync("Store")) ?? new List<OrderHistory>();
+            storeOrderHistory = await JsonSerializer.DeserializeAsync<List<OrderHistory>>(await client.GetStreamAsync($"Store/GetStoreOrderHistory/{storeId}/{sortOrder}")) ?? new List<OrderHistory>();
         }
         catch (HttpRequestException e)
         {
@@ -92,19 +92,16 @@ public class HttpService
 
     }
 
-    public async Task<Store> GetStoreInventoryAsync(Store currStore)
+    public async Task<List<Product>> GetStoreInventoryAsync(Store currStore)
     {
-        string serializedStore = JsonSerializer.Serialize(currStore.Id);
-        StringContent content = new StringContent(serializedStore, Encoding.UTF8, "application/json");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
         {
-            HttpResponseMessage response = await client.PatchAsync("Store/GetInventory", content);
-            currStore.Inventory = await JsonSerializer.DeserializeAsync<List<Product>>(await response.Content.ReadAsStreamAsync()) ?? new List<Product>();
+            return await JsonSerializer.DeserializeAsync<List<Product>>(await client.GetStreamAsync($"Store/GetInventory/{currStore.Id}")) ?? new List<Product>();
         }
         catch (HttpRequestException e)
         {
@@ -116,20 +113,20 @@ public class HttpService
             Log.CloseAndFlush();
         }
 
-        return currStore;
+        return new List<Product>();
     }
 
-    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId)
+    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId, int sortOrder)
     {
         List<OrderHistory> userOrderHistory = new List<OrderHistory>();
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
         {
-            userOrderHistory = await JsonSerializer.DeserializeAsync<List<OrderHistory>>(await client.GetStreamAsync("Store")) ?? new List<OrderHistory>();
+            userOrderHistory = await JsonSerializer.DeserializeAsync<List<OrderHistory>>(await client.GetStreamAsync($"Store/GetUserOrderHistory/{userId}/{sortOrder}")) ?? new List<OrderHistory>();
         }
         catch (HttpRequestException e)
         {
@@ -145,20 +142,19 @@ public class HttpService
 
     }
 
-    public async Task AddOrderAsync(Order newOrder)
+    public async void AddOrderAsync(Order newOrder)
     {
         string serializedOrder = JsonSerializer.Serialize(newOrder);
-        StringContent content = new StringContent(serializedOrder, Encoding.UTF8, "application/json");
+        StringContent content = new StringContent(serializedOrder, UnicodeEncoding.UTF8, "application/json");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
         {
-            HttpResponseMessage response = await client.PostAsync("Store", content);
+            HttpResponseMessage response = await client.PostAsync("Store/AddOrder", content);
             response.EnsureSuccessStatusCode();
-            await JsonSerializer.DeserializeAsync<User>(await response.Content.ReadAsStreamAsync());
         }
         catch (HttpRequestException e)
         {
@@ -174,21 +170,66 @@ public class HttpService
     public async Task<User> AddUserAsync(User newUser)
     {
         string serializedUser = JsonSerializer.Serialize(newUser);
-        StringContent content = new StringContent(serializedUser, Encoding.UTF8, "application/json");
+        StringContent content = new StringContent(serializedUser, UnicodeEncoding.UTF8, "application/json");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .WriteTo.File("../../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
         {
-            HttpResponseMessage response = await client.PostAsync("Store", content);
+            HttpResponseMessage response = await client.PostAsync("Store/AddUser", content);
             response.EnsureSuccessStatusCode();
             return await JsonSerializer.DeserializeAsync<User>(await response.Content.ReadAsStreamAsync()) ?? new User();
         }
         catch (HttpRequestException)
         {
             throw;
+        }
+    }
+
+    public async void AddProduct(int storeId, Product newProduct)
+    {
+        string serializedProduct = JsonSerializer.Serialize(newProduct);
+        StringContent content = new StringContent(serializedProduct, UnicodeEncoding.UTF8, "application/json");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+        try
+        {
+            HttpResponseMessage response = await client.PostAsync($"Store/AddProduct/{storeId}", content);
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException)
+        {
+            throw;
+        }
+    }
+
+    public async void UpdateStoreInventory(int storeId, Product updatedProduct)
+    {
+        string serializedProduct = JsonSerializer.Serialize(updatedProduct);
+        StringContent content = new StringContent(serializedProduct, UnicodeEncoding.UTF8, "application/json");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+        try
+        {
+            HttpResponseMessage response = await client.PutAsync($"Store/UpdateInventory/{storeId}", content);
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine("Well Gee, it seems like the no good happened!");
+            Log.Information($"Exception Caught: {e}");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
         }
     }
 }

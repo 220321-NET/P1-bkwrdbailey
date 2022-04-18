@@ -24,6 +24,11 @@ public class StoreBL : IStoreBL
     {
         _repo.CreateOrder(order);
     }
+    
+    public void AddProduct(int storeId, Product newProduct)
+    {
+        _repo.CreateProduct(storeId, newProduct);
+    }
 
     public async Task<List<Store>> GetAllStoresAsync()
     {
@@ -35,15 +40,19 @@ public class StoreBL : IStoreBL
         return _repo.GetStoreInventory(currStoreId);
     }
 
-    public async Task<List<OrderHistory>> GetOrderHistoryByStoreAsync(int storeId)
+    public List<OrderHistory> GetOrderHistoryByStoreAsync(int storeId, int sortOrder)
     {
-        List<OrderHistory> storeOrderHistory = await _repo.GetOrderHistoryByStoreAsync(storeId);
+        List<OrderHistory> storeOrderHistory = _repo.GetOrderHistoryByStoreAsync(storeId, sortOrder);
         return storeOrderHistory;
     }
 
-    public async Task<List<OrderHistory>> GetOrderHistoryByUserAsync(int userId)
+    public List<OrderHistory> GetOrderHistoryByUserAsync(int userId, int sortOrder)
     {
-        List<OrderHistory> userOrderHistory = await _repo.GetOrderHistoryByUserAsync(userId);
+        List<OrderHistory> userOrderHistory = _repo.GetOrderHistoryByUserAsync(userId, sortOrder);
         return userOrderHistory;
+    }
+
+    public void UpdateStoreInventory(int storeId, Product productToUpdate) {
+        _repo.UpdateInventoryProduct(storeId, productToUpdate);
     }
 }
