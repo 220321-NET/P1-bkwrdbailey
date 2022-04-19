@@ -82,9 +82,4 @@ public class Employee : User
 
         return newProduct;
     }
-
-    // public void RemoveProduct()
-    // {
-    //     // Completely remove a product from the store
-    // }
 }

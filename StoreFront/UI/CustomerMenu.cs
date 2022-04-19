@@ -354,9 +354,11 @@ public class CustomerMenu
         {
             Console.WriteLine("Finalizing Order...");
             Order order = new Order();
-            order.customer = _user;
-            order.cart = cart;
-            order.store = currentStore;
+            order.storeId = currentStore.Id;
+            order.TotalCost = cart.GetTotalCost();
+            order.customerId = _user.Id;
+            order.cartContents = cart.AllProducts();
+            order.storeInventory = currentStore.Inventory;
             _httpService.AddOrderAsync(order);
             return true;
         }
@@ -425,7 +427,7 @@ public class CustomerMenu
 
         foreach (OrderHistory order in userOrderHistory)
         {
-            Console.WriteLine($"{order.OrderId} | {order.StoreName} | {order.StoreAddress} | ${order.TotalCost}:\n -Product Info:${order.ItemPrice} | {order.ProductName} | {order.ItemQty} QTY. | {order.DateOrdered}");
+            Console.WriteLine($"Order: {order.OrderId} | {order.StoreName} | {order.StoreAddress} | ${order.TotalCost}:\n -Product Info: ${order.ItemPrice} | {order.ProductName} | Bought {order.ItemQty} | {order.DateOrdered}");
         }
 
         Console.WriteLine("==================================================================");

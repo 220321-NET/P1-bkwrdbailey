@@ -11,13 +11,13 @@ public class Cart
     {   
         double price = item.Price * item.Quantity;
         Contents.Add(item);
-        TotalCost += price;
+        TotalCost += Math.Round(price, 2);
     }
 
     public Product RemoveItem(int item)
     {
         int amtOfItem = Contents[item].Quantity;
-        TotalCost -= (Contents[item].Price * amtOfItem);
+        TotalCost -= Math.Round((Contents[item].Price * amtOfItem), 2);
         Product product = Contents[item];
         Contents.RemoveAt(item);
 

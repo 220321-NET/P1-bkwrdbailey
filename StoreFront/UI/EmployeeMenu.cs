@@ -44,26 +44,30 @@ public class EmployeeMenu
         switch (adminChoice)
         {
             case "1":
+                Console.WriteLine("==================================================================");
                 await SelectAStore();
                 Console.WriteLine("==================================================================");
                 break;
 
             case "2":
+                Console.WriteLine("==================================================================");
                 await StoreOrderHistory();
                 Console.WriteLine("==================================================================");
                 break;
 
             case "3":
+            Console.WriteLine("==================================================================");
                 AddProduct(_user.NewProduct());
                 Console.WriteLine("==================================================================");
                 break;
 
             case "4":
-                CheckInventory();
+                await CheckInventory();
                 Console.WriteLine("==================================================================");
                 break;
 
             case "5":
+                Console.WriteLine("==================================================================");
                 AdjustProductQuantity();
                 Console.WriteLine("==================================================================");
                 break;
@@ -147,16 +151,18 @@ public class EmployeeMenu
 
         List<OrderHistory> storeOrderHistory = await _httpService.GetOrderHistoryByStoreAsync(currentStore.Id, sortOrder);
 
-        Console.WriteLine("===========================\n====== Order History ======\n===========================");
+        Console.WriteLine("===============================\n======== Order History ========\n===============================");
 
         foreach (OrderHistory order in storeOrderHistory)
         {
-            Console.WriteLine($"{order.OrderId} | {order.CustomerName} | ${order.TotalCost} | {order.DateOrdered}:\n -Product Info: ${order.ItemPrice} | {order.ProductName} | {order.ItemQty} Qty.");
+            Console.WriteLine($"Order: {order.OrderId} | {order.CustomerName} | ${order.TotalCost} | {order.DateOrdered}:\n -Product Info: ${order.ItemPrice} | {order.ProductName} | Bought {order.ItemQty}");
         }
     }
 
-    private void CheckInventory()
+    private async Task CheckInventory()
     {
+        currentStore.Inventory = await _httpService.GetStoreInventoryAsync(currentStore);
+        Console.WriteLine("==================================================================");
         currentStore.DisplayStock();
     }
 
@@ -178,7 +184,6 @@ public class EmployeeMenu
             Console.WriteLine("Yikes, there seems to have been an issue adding that product!");
             return;
         }
-
         Console.WriteLine("Product Added Successfully!");
     }
 
@@ -193,6 +198,7 @@ public class EmployeeMenu
 
 
     UpdateProduct:
+        Console.WriteLine("==================================================================");
         currentStore.DisplayStock();
         Console.WriteLine("Select a product to update:");
 
@@ -249,6 +255,7 @@ public class EmployeeMenu
             else if (choice == 3)
             {
                 Console.WriteLine("Returning to Menu...");
+                Log.CloseAndFlush();
                 return;
             }
             else
@@ -263,7 +270,6 @@ public class EmployeeMenu
             Log.Information($"Exception Caught: {e}");
             goto UpdateDecision;
         }
-
         Log.CloseAndFlush();
     }
 }
