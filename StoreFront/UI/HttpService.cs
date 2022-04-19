@@ -144,7 +144,7 @@ public class HttpService
 
     public async void AddOrderAsync(Order newOrder)
     {
-        var serializedOrder = JsonSerializer.Serialize(newOrder);// fix this?
+        var serializedOrder = JsonSerializer.Serialize(newOrder);
         StringContent content = new StringContent(serializedOrder, UnicodeEncoding.UTF8, "application/json");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
