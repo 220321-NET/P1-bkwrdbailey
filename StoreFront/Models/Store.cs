@@ -12,7 +12,7 @@ public class Store
         int i = 1;
         foreach (Product product in Inventory)
         {
-            Console.WriteLine($"[{i}] {product.Name} | ${product.Price} | {product.Quantity} QTY.\n{product.Description}");
+            Console.WriteLine($"[{i}] {product.Name} | ${product.Price} | {product.Quantity} QTY.\n{product.Description}\n");
             i++;
         }
     }

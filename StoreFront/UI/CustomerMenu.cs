@@ -222,61 +222,76 @@ public class CustomerMenu
             goto ItemToAdd;
         }
 
-        foreach (Product product in currentStore.Inventory)
+        Product product = currentStore.Inventory[productId - 1];
+
+        if (product.Quantity == 0)
         {
-            if (product.Id == productId)
+            Console.WriteLine("There is no more of that product to acquire\nWould you like to select another product? [Y/N]");
+
+            string answer = Console.ReadLine().Trim().ToUpper();
+            if (answer == "Y")
             {
-            AmtToAdd:
-                Console.WriteLine("How many of this item would you like:");
-                int amount;
-
-
-                try
-                {
-                    Log.Logger = new LoggerConfiguration()
-                        .MinimumLevel.Debug()
-                        .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
-                        .CreateLogger();
-
-                    amount = Convert.ToInt32(Console.ReadLine());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Invalid Input");
-                    Log.Information($"Exception Caught: {e}");
-                    goto AmtToAdd;
-                }
-                finally
-                {
-                    Log.CloseAndFlush();
-                }
-
-                if (amount > product.Quantity)
-                {
-                    Console.WriteLine("Requested amount is higher than its quantity");
-                    goto AmtToAdd;
-                }
-
-                Product item = new Product();
-
-                item.Id = product.Id;
-                item.Name = product.Name;
-                item.Price = product.Price;
-                item.Description = product.Description;
-                item.Quantity = amount;
-
-                for (int i = 0; i < currentStore.Inventory.Count; i++)
-                {
-                    if (productId == currentStore.Inventory[i].Id)
-                    {
-                        currentStore.Inventory[i].Quantity -= amount;
-                    }
-                }
-
-                cart.AddItem(item);
+                goto ItemToAdd;
+            }
+            else if (answer == "N")
+            {
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Invalid Input");
             }
         }
+
+    AmtToAdd:
+        Console.WriteLine("How many of this item would you like:");
+        int amount;
+
+        try
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File("../Logs/ExceptionLogging.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+            amount = Convert.ToInt32(Console.ReadLine());
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Invalid Input");
+            Log.Information($"Exception Caught: {e}");
+            goto AmtToAdd;
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+
+        if (amount > product.Quantity)
+        {
+            Console.WriteLine("Requested amount is higher than its quantity");
+            goto AmtToAdd;
+        }
+
+        Product item = new Product();
+
+        item.Id = product.Id;
+        item.Name = product.Name;
+        item.Price = product.Price;
+        item.Description = product.Description;
+        item.Quantity = amount;
+
+        for (int i = 0; i < currentStore.Inventory.Count; i++)
+        {
+            if (product == currentStore.Inventory[i])
+            {
+                currentStore.Inventory[i].Quantity -= amount;
+            }
+        }
+
+        cart.AddItem(item);
     }
+
 
     private void RemoveProduct()
     {
@@ -318,7 +333,6 @@ public class CustomerMenu
         try
         {
             product = cart.RemoveItem(numChoice - 1);
-
         }
         catch (Exception e)
         {
