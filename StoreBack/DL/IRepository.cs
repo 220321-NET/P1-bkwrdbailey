@@ -7,7 +7,7 @@ public interface IRepository
     Task<List<User>> GetAllUsersAsync();
     Task<List<Store>> GetAllStoresAsync();
     List<OrderHistory> GetOrderHistoryByUserAsync(int userId, int sortOrder);
-    List<OrderHistory> GetOrderHistoryByStoreAsync(int storeId, int sortOrder);
+    List<OrderHistory> GetOrderHistoryByStoreAsync(int _storeId, int sortOrder);
     User CreateUser(User userToAdd);
     void CreateOrder(Order order);
     void CreateCart(Order order);

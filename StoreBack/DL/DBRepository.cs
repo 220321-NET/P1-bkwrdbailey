@@ -76,7 +76,7 @@ public class DBRepository : IRepository
             string password = reader.GetString(2);
             bool _isEmployed = reader.GetBoolean(3);
 
-            if (_isEmployed == true)
+            if (_isEmployed)
             {
                 Employee employee = new Employee
                 {

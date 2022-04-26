@@ -4,7 +4,7 @@ using Serilog;
 
 public class Employee : User
 {
-    public Product NewProduct()
+    public static Product NewProduct()
     {
     ProductName:
         Product newProduct = new Product();

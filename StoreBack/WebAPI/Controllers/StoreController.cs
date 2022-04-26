@@ -76,11 +76,5 @@ namespace WebAPI.Controllers
         {
             _bl.UpdateStoreInventory(storeId, productToUpdate);
         }
-
-        // DELETE api/<StoreController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
