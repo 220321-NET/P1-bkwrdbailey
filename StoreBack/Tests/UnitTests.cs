@@ -13,7 +13,7 @@ namespace Tests;
 
 public class UnitTests
 {
-    private readonly string _apiBaseURL = "https://localhost:7250/api/";
+    private readonly string _apiBaseURL = "https://computerstoreapi.azurewebsites.net/api/";
     private HttpClient client = new HttpClient();
 
     [Fact]
